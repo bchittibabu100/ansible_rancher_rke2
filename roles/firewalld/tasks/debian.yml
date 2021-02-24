@@ -1,23 +1,4 @@
 ---
-# - name: Add required modules
-#   modprobe:
-#     name: "{{ item.name }}"
-#     state: present
-#   loop:
-#     "{{ _module }}"
-#   tags: firewalld
-
-# - name: Setup required sysctl params
-#   sysctl:
-#     name: "{{ item.key }}"
-#     value: "{{ item.value }}"
-#     sysctl_set: yes
-#     state: present
-#     reload: yes
-#   loop:
-#     "{{ _sysctl }}"
-#   tags: firewalld
-
 - name: Install packages that allow apt to be used over HTTPS
   apt:
     name: "{{ packages }}"
@@ -31,35 +12,6 @@
     - gnupg2
     - software-properties-common
   tags: firewalld
-
-# - name: copy templates
-#   template:
-#     dest: "{{ item.dest }}"
-#     src: "{{ item.src | default('./templates' + item.dest + '.j2') }}"
-#     owner: "{{ item.owner | default('root') }}"
-#     group: "{{ item.group | default('root') }}"
-#     mode: "{{ item.mode | default('0644') }}"
-#   loop:
-#     - { dest: "/etc/apt/sources.list" }
-#   tags: firewalld
-
-# - name: Add signing keys
-#   apt_key:
-#     url: "{{ item.gpg }}"
-#     state: present
-#   loop: "{{ _key }}"
-#   register: result
-#   until: result is succeeded
-#   tags: firewalld
-
-# - name: Add repositoies
-#   apt_repository:
-#     repo: "{{ item.repo }}"
-#     state: present
-#   loop: "{{ _repo }}"
-#   register: result
-#   until: result is succeeded
-#   tags: firewalld
 
 - name: Update all packages
   apt:
@@ -79,11 +31,6 @@
   until: result is succeeded
   tags: firewalld
 
-# - name: just force systemd to reread configs
-#   systemd:
-#     daemon_reload: yes
-#   tags: firewalld
-
 - name: Start and enable services
   systemd:
     name: "{{ item.name }}"
@@ -101,7 +48,6 @@
     permanent: yes
     state: enabled
   loop: '{{ _k8s_master_ports }}'
-  # when: "'master' in ansible_hostname"
   tags: firewalld
 
 - name: Configure firewalld on worker nodes
@@ -116,43 +62,3 @@
 - name: Reload firewalld
   shell: firewall-cmd --reload
   tags: firewalld
-
-# - name: Add /usr/local/bin to sudo secure_path
-#   lineinfile:
-#     line: 'Defaults    secure_path = /sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin'
-#     regexp: "Defaults(\s)*secure_path(\s)*="
-#     state: present
-#     insertafter: EOF
-#     path: /etc/sudoers
-#     validate: 'visudo -cf %s'
-#   tags: firewalld
-
-# - name: Download script
-#   get_url:
-#     url: "{{ item.url }}"
-#     # checksum: "{{ item.checksum }}"
-#     dest: "{{ item.dest }}"
-#     owner: root
-#     group: root
-#     mode: 0755
-#   loop: "{{ _install_script }}"
-#   register: result
-#   until: result is succeeded
-#   tags: firewalld
-
-# - name: Execute script
-#   shell: "{{ item.dest }}"
-#   become: true
-#   loop: "{{ _install_script }}"
-#   register: result
-#   until: result is succeeded
-#   tags: firewalld
-
-# - name: Remove script
-#   file:
-#     path: "{{ item.dest }}"
-#     state: absent
-#   loop: "{{ _install_script }}"
-#   register: result
-#   until: result is succeeded
-#   tags: firewalld
